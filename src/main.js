@@ -355,14 +355,15 @@ loader.load(
       container.innerHTML = '<span class="no-anims">No animations found</span>';
     }
 
-    const box = new THREE.Box3().setFromObject(object);
-    const size = box.getSize(new THREE.Vector3());
+    let box = new THREE.Box3().setFromObject(object);
     const center = box.getCenter(new THREE.Vector3());
 
-    // Center the model and place it on the ground
-    object.position.x = -center.x;
-    object.position.z = -center.z;
-    object.position.y = -box.min.y;
+    // Center horizontally, place bottom at y=0
+    object.position.set(-center.x, -box.min.y, -center.z);
+
+    // Recompute after repositioning
+    box = new THREE.Box3().setFromObject(object);
+    const size = box.getSize(new THREE.Vector3());
 
     const maxDim = Math.max(size.x, size.y, size.z);
     const distance = maxDim * 2;
