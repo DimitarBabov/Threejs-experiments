@@ -42,7 +42,7 @@ fillLight.position.set(-5, 5, -5);
 scene.add(fillLight);
 
 // ── Grid ──
-const grid = new THREE.GridHelper(20, 40, 0x444466, 0x333355);
+const grid = new THREE.GridHelper(10, 20, 0x444466, 0x333355);
 scene.add(grid);
 
 // ── Textures ──
@@ -305,6 +305,11 @@ loader.load(
   `${base}60kw Generator Ver 1.fbx`,
   (object) => {
     fixMaterials(object);
+
+    // FBX is in centimeters, WebXR uses meters
+    const CM_TO_M = 0.01;
+    object.scale.setScalar(CM_TO_M);
+
     scene.add(object);
 
     const container = document.getElementById('anim-buttons');
@@ -340,8 +345,10 @@ loader.load(
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
 
-    object.position.sub(center);
-    object.position.y += size.y / 2;
+    // Center the model and place it on the ground
+    object.position.x = -center.x;
+    object.position.z = -center.z;
+    object.position.y = -box.min.y;
 
     const maxDim = Math.max(size.x, size.y, size.z);
     const distance = maxDim * 2;
@@ -351,6 +358,10 @@ loader.load(
 
     controls.target.set(0, size.y / 2, 0);
     controls.update();
+
+    // Position VR menu relative to model size
+    vrMenuGroup.position.set(-maxDim * 0.8, size.y * 0.6, -maxDim * 0.5);
+    console.log(`Model size (meters): ${size.x.toFixed(2)} x ${size.y.toFixed(2)} x ${size.z.toFixed(2)}`);
   },
   (progress) => {
     if (progress.total) {
