@@ -296,17 +296,32 @@ function onSelectStart() {
 controller0.addEventListener('selectstart', onSelectStart);
 controller1.addEventListener('selectstart', onSelectStart);
 
-// Show/hide VR panel and handle AR passthrough
+// Save/restore camera between XR sessions
+const savedCameraState = { position: new THREE.Vector3(), quaternion: new THREE.Quaternion() };
+
 renderer.xr.addEventListener('sessionstart', () => {
+  // Save non-XR camera state before XR takes over
+  savedCameraState.position.copy(camera.position);
+  savedCameraState.quaternion.copy(camera.quaternion);
+
+  // Reset camera so XR tracking starts clean from the origin
+  camera.position.set(0, 0, 0);
+  camera.quaternion.identity();
+
   vrMenuGroup.visible = true;
+
   const session = renderer.xr.getSession();
   if (session && session.environmentBlendMode !== 'opaque') {
-    // AR mode: transparent background for passthrough
     scene.background = null;
     grid.visible = false;
   }
 });
+
 renderer.xr.addEventListener('sessionend', () => {
+  // Restore non-XR camera state
+  camera.position.copy(savedCameraState.position);
+  camera.quaternion.copy(savedCameraState.quaternion);
+
   vrMenuGroup.visible = false;
   scene.background = defaultBackground;
   grid.visible = true;
