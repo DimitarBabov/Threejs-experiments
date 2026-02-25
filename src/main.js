@@ -2,11 +2,13 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
+import { ARButton } from 'three/addons/webxr/ARButton.js';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 
 // ── Scene ──
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1a1a2e);
+const defaultBackground = new THREE.Color(0x1a1a2e);
+scene.background = defaultBackground;
 
 const camera = new THREE.PerspectiveCamera(
   60,
@@ -16,7 +18,7 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 // ── Renderer with XR ──
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -25,6 +27,10 @@ renderer.xr.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 document.body.appendChild(VRButton.createButton(renderer));
+document.body.appendChild(ARButton.createButton(renderer, {
+  requiredFeatures: ['local-floor'],
+  optionalFeatures: ['hand-tracking'],
+}));
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -290,12 +296,20 @@ function onSelectStart() {
 controller0.addEventListener('selectstart', onSelectStart);
 controller1.addEventListener('selectstart', onSelectStart);
 
-// Show/hide VR panel based on XR session
+// Show/hide VR panel and handle AR passthrough
 renderer.xr.addEventListener('sessionstart', () => {
   vrMenuGroup.visible = true;
+  const session = renderer.xr.getSession();
+  if (session && session.environmentBlendMode !== 'opaque') {
+    // AR mode: transparent background for passthrough
+    scene.background = null;
+    grid.visible = false;
+  }
 });
 renderer.xr.addEventListener('sessionend', () => {
   vrMenuGroup.visible = false;
+  scene.background = defaultBackground;
+  grid.visible = true;
 });
 
 // ── Load FBX model ──
