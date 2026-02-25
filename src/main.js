@@ -38,8 +38,8 @@ scene.add(fillLight);
 const grid = new THREE.GridHelper(20, 40, 0x444466, 0x333355);
 scene.add(grid);
 
-// Texture map: filename -> full URL
-const textureBasePath = '/60kw Generator Ver 2/';
+const base = import.meta.env.BASE_URL;
+const textureBasePath = `${base}60kw Generator Ver 2/`;
 const textureLoader = new THREE.TextureLoader();
 
 function fixMaterials(object) {
@@ -120,7 +120,7 @@ function playAnimation(index) {
 const loader = new FBXLoader();
 loader.setResourcePath(textureBasePath);
 loader.load(
-  '/60kw Generator Ver 1.fbx',
+  `${base}60kw Generator Ver 1.fbx`,
   (object) => {
     fixMaterials(object);
     scene.add(object);
